@@ -1,0 +1,29 @@
+{
+  "Author": "Churin",
+  "Name": "Belias",
+  "InternalName": "Belias",
+  "Description": "Rotation Editor for Rotation Solver Reborn",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 12,
+  "TestingDalamudApiLevel": 12,
+  "Tags": [
+    "combat",
+    "rotation",
+    "auto",
+    "solver",
+    "pve",
+    "pvp",
+    "editor"
+  ],
+  "CategoryTags": [
+    "jobs"
+  ],
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "CanUnloadAsync": false,
+  "LoadPriority": 0,
+  "IsTestingExclusive": false,
+  "IconUrl": "E:\\Github\\aventurescence\\Belias\\Belias\\Assets\\Belias.png",
+  "Punchline": "Analyses combat information every frame and finds the best action.",
+  "AcceptsFeedback": true
+}

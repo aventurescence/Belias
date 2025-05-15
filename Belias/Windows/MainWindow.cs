@@ -6,18 +6,13 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 
-namespace SamplePlugin.Windows;
+namespace Belias.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-    private string GoatImagePath;
-    private Plugin Plugin;
-
-    // We give this window a hidden ID using ##
-    // So that the user will see "My Amazing Window" as window title,
-    // but for ImGui the ID is "My Amazing Window##With a hidden ID"
-    public MainWindow(Plugin plugin, string goatImagePath)
-        : base("My Amazing Window##With a hidden ID", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    private readonly Plugin plugin;
+    private bool disposedValue;    public MainWindow(Plugin plugin)
+        : base("Belias - Rotation Editor##MainWindow", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -25,82 +20,147 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        GoatImagePath = goatImagePath;
-        Plugin = plugin;
+        this.plugin = plugin;
     }
 
-    public void Dispose() { }
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                // Dispose managed resources here if needed.
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 
     public override void Draw()
     {
-        // Do not use .Text() or any other formatted function like TextWrapped(), or SetTooltip().
-        // These expect formatting parameter if any part of the text contains a "%", which we can't
-        // provide through our bindings, leading to a Crash to Desktop.
-        // Replacements can be found in the ImGuiHelpers Class
-        ImGui.TextUnformatted($"The random config bool is {Plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
-
-        if (ImGui.Button("Show Settings"))
+        DrawHeader();
+        DrawConfigurationSection();
+        DrawRotationSection();
+        DrawPlayerInformationSection();
+        DrawFooter();
+    }    private void DrawHeader()
+    {
+        // Use Belias.png as the logo from the Assets folder in output directory
+        try
         {
-            Plugin.ToggleConfigUI();
-        }
-
-        ImGui.Spacing();
-
-        // Normally a BeginChild() would have to be followed by an unconditional EndChild(),
-        // ImRaii takes care of this after the scope ends.
-        // This works for all ImGui functions that require specific handling, examples are BeginTable() or Indent().
-        using (var child = ImRaii.Child("SomeChildWithAScrollbar", Vector2.Zero, true))
-        {
-            // Check if this child is drawing
-            if (child.Success)
+            var assemblyDir = Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!;
+            var logoPath = System.IO.Path.Combine(assemblyDir, "Assets", "Belias.png");
+            
+            if (!System.IO.File.Exists(logoPath))
             {
-                ImGui.TextUnformatted("Have a goat:");
-                var goatImage = Plugin.TextureProvider.GetFromFile(GoatImagePath).GetWrapOrDefault();
-                if (goatImage != null)
-                {
-                    using (ImRaii.PushIndent(55f))
-                    {
-                        ImGui.Image(goatImage.ImGuiHandle, new Vector2(goatImage.Width, goatImage.Height));
-                    }
-                }
-                else
-                {
-                    ImGui.TextUnformatted("Image not found.");
-                }
-
-                ImGuiHelpers.ScaledDummy(20.0f);
-
-                // Example for other services that Dalamud provides.
-                // ClientState provides a wrapper filled with information about the local player object and client.
-
-                var localPlayer = Plugin.ClientState.LocalPlayer;
-                if (localPlayer == null)
-                {
-                    ImGui.TextUnformatted("Our local player is currently not loaded.");
-                    return;
-                }
-
-                if (!localPlayer.ClassJob.IsValid)
-                {
-                    ImGui.TextUnformatted("Our current job is currently not valid.");
-                    return;
-                }
-
-                // ExtractText() should be the preferred method to read Lumina SeStrings,
-                // as ToString does not provide the actual text values, instead gives an encoded macro string.
-                ImGui.TextUnformatted($"Our current job is ({localPlayer.ClassJob.RowId}) \"{localPlayer.ClassJob.Value.Abbreviation.ExtractText()}\"");
-
-                // Example for quarrying Lumina directly, getting the name of our current area.
-                var territoryId = Plugin.ClientState.TerritoryType;
-                if (Plugin.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(territoryId, out var territoryRow))
-                {
-                    ImGui.TextUnformatted($"We are currently in ({territoryId}) \"{territoryRow.PlaceName.Value.Name.ExtractText()}\"");
-                }
-                else
-                {
-                    ImGui.TextUnformatted("Invalid territory.");
-                }
+                // Try looking in another location
+                logoPath = System.IO.Path.Combine(assemblyDir, "Belias.png");
+            }
+            
+            var logoImage = Plugin.TextureProvider.GetFromFile(logoPath).GetWrapOrDefault();
+            if (logoImage != null)
+            {
+                float scale = 0.8f; // Scale down the logo if needed
+                ImGui.Image(logoImage.ImGuiHandle, new Vector2(logoImage.Width * scale, logoImage.Height * scale));
             }
         }
+        catch (Exception ex)
+        {
+            // If we can't load the image, just don't display it
+            Plugin.Log.Error($"Failed to load logo: {ex.Message}");
+        }
+        
+        ImGui.TextUnformatted("Belias - Rotation Editor");
+        ImGui.Separator();
+        ImGui.TextUnformatted("Create and manage rotations for Rotation Solver Reborn with ease.");
+        ImGui.Spacing();
+        
+        // Reference class member to ensure non-static
+        _ = plugin;
+    }
+
+    private void DrawConfigurationSection()
+    {
+        ImGui.TextUnformatted("Configuration:");
+        ImGui.Indent();
+        ImGui.TextUnformatted($"Random config bool: {plugin.Configuration.SomePropertyToBeSavedAndWithADefault}");
+        if (ImGui.Button("Show Settings"))
+        {
+            plugin.ToggleConfigUI();
+        }
+        ImGui.Unindent();
+        ImGui.Spacing();
+    }
+
+    private void DrawRotationSection()
+    {
+        ImGui.TextUnformatted("Rotation Management:");
+        ImGui.Indent();
+          if (ImGui.Button("Open Node Editor"))
+        {
+            // Open the node editor window
+            plugin.ToggleNodeEditorUI();
+        }
+        
+        ImGui.SameLine();
+        
+        if (ImGui.Button("Create New Rotation"))
+        {
+            // Implementation for creating a new rotation
+        }
+        
+        ImGui.Unindent();
+        ImGui.Spacing();
+        
+        // Reference class member to ensure non-static
+        _ = plugin;
+    }
+
+    private void DrawPlayerInformationSection()
+    {
+        ImGui.TextUnformatted("Player Information:");
+        ImGui.Indent();
+        var localPlayer = Plugin.ClientState.LocalPlayer;
+        if (localPlayer == null)
+        {
+            ImGui.TextUnformatted("Local player is not loaded.");
+        }
+        else if (!localPlayer.ClassJob.IsValid)
+        {
+            ImGui.TextUnformatted("Current job is not valid.");
+        }
+        else
+        {
+            ImGui.TextUnformatted($"Current job: ({localPlayer.ClassJob.RowId}) \"{localPlayer.ClassJob.Value.Abbreviation.ExtractText()}\"");
+            var territoryId = Plugin.ClientState.TerritoryType;
+            if (Plugin.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(territoryId, out var territoryRow))
+            {
+                ImGui.TextUnformatted($"Current area: ({territoryId}) \"{territoryRow.PlaceName.Value.Name.ExtractText()}\"");
+            }
+            else
+            {
+                ImGui.TextUnformatted("Invalid territory.");
+            }
+        }
+        ImGui.Unindent();
+        ImGui.Spacing();
+        
+        // Reference class member to ensure non-static
+        _ = plugin;
+    }
+
+    private void DrawFooter()
+    {
+        ImGui.Separator();
+        ImGui.TextUnformatted("Thank you for using Belias Plugin!");
+        
+        // Reference class member to ensure non-static
+        _ = plugin;
     }
 }

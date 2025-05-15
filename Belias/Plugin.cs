@@ -2,11 +2,12 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
+using Belias.Windows;
+using Belias.Windows.NodesSystem;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using SamplePlugin.Windows;
 
-namespace SamplePlugin;
+namespace Belias;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -17,26 +18,24 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
 
-    private const string CommandName = "/pmycommand";
+    private const string CommandName = "/belias";
 
     public Configuration Configuration { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("SamplePlugin");
+    public readonly WindowSystem WindowSystem = new("Belias");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
-
-    public Plugin()
+    private NodeEditorWindow NodeEditorWindow { get; init; }    public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
-        // you might normally want to embed resources and load them from the manifest stream
-        var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, goatImagePath);
+        MainWindow = new MainWindow(this);
+        NodeEditorWindow = new NodeEditorWindow();
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
+        WindowSystem.AddWindow(NodeEditorWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -54,16 +53,15 @@ public sealed class Plugin : IDalamudPlugin
 
         // Add a simple message to the log with level set to information
         // Use /xllog to open the log window in-game
-        // Example Output: 00:57:54.959 | INF | [SamplePlugin] ===A cool log message from Sample Plugin===
+        // Example Output: 00:57:54.959 | INF | [Belias] ===A cool log message from Sample Plugin===
         Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
     }
 
     public void Dispose()
     {
-        WindowSystem.RemoveAllWindows();
-
-        ConfigWindow.Dispose();
+        WindowSystem.RemoveAllWindows();        ConfigWindow.Dispose();
         MainWindow.Dispose();
+        NodeEditorWindow.Dispose();
 
         CommandManager.RemoveHandler(CommandName);
     }
@@ -74,8 +72,7 @@ public sealed class Plugin : IDalamudPlugin
         ToggleMainUI();
     }
 
-    private void DrawUI() => WindowSystem.Draw();
-
-    public void ToggleConfigUI() => ConfigWindow.Toggle();
+    private void DrawUI() => WindowSystem.Draw();    public void ToggleConfigUI() => ConfigWindow.Toggle();
     public void ToggleMainUI() => MainWindow.Toggle();
+    public void ToggleNodeEditorUI() => NodeEditorWindow.Toggle();
 }

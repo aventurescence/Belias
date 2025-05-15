@@ -1,0 +1,15 @@
+{
+  "Author": "Churin",
+  "Name": "Belias",
+  "Punchline": "Rotation Editor for Rotation Solver Reborn",
+  "Description": "A visual node-based editor for creating and managing rotations for Rotation Solver Reborn. Use /belias to open the main interface.",
+  "ApplicableVersion": "any",
+  "IconUrl": "https://raw.githubusercontent.com/aventurescence/Belias/main/Belias/Assets/Belias.png",
+  "ImageUrls": ["https://raw.githubusercontent.com/aventurescence/Belias/main/Belias/Assets/Belias.png"],
+  "Tags": [
+    "rotation",
+    "solver",
+    "editor",
+    "visual"
+  ]
+}
