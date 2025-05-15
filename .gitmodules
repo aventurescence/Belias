@@ -1,0 +1,3 @@
+[submodule "Modules/RotationSolverReborn"]
+	path = Modules/RotationSolverReborn
+	url = https://github.com/aventurescence/RotationSolverReborn.git
