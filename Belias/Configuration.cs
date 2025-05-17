@@ -7,11 +7,17 @@ namespace Belias;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; } = 0;
+    public int Version { get; set; } = 1;
 
-    public bool IsConfigWindowMovable { get; set; } = true;
-    public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
-
+    // UI Settings
+    public bool DarkMode { get; set; } = true;
+    public bool ShowWelcomeOnStartup { get; set; } = true;
+    public string AccentColor { get; set; } = "#C83C23";
+    
+    // Application Settings
+    public bool AutoStart { get; set; } = false;
+    public int RefreshRate { get; set; } = 60;
+    
     // the below exist just to make saving less cumbersome
     public void Save()
     {

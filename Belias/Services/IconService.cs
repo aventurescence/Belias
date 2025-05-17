@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using Dalamud.Interface.Textures.TextureWraps;
+using Dalamud.Plugin.Services;
 
 namespace Belias.Services;
 
@@ -45,14 +46,59 @@ public static class IconService
         JobIconMap[Job.WAR] = LoadIcon("WarriorIconPath");
         JobIconMap[Job.PLD] = LoadIcon("PaladinIconPath");
         // Add other jobs as needed
-    }
-
-    private static IDalamudTextureWrap LoadIcon(string path)
+    }    private static IDalamudTextureWrap LoadIcon(string path)
     {
         // Simulate using the path parameter to load an icon
         Console.WriteLine($"Loading icon from path: {path}");
         // Return a placeholder texture object (replace with actual implementation)
         return new PlaceholderTextureWrap();
+    }    /// <summary>
+    /// Loads an image file from the specified path.
+    /// </summary>
+    /// <param name="path">Path to the image file</param>
+    /// <returns>A texture wrap or null if loading failed</returns>
+    public static IDalamudTextureWrap? LoadImageFromFile(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+            {
+                Console.WriteLine($"Image file not found: {path}");
+                return null;
+            }
+            
+            Console.WriteLine($"Image file found at: {path}");
+            
+            // Try using the UiBuilder to load the image if available
+            try
+            {
+                if (Plugin.PluginInterface != null)
+                {                    // Use the TextureProvider instead of UiBuilder
+                    try 
+                    {
+                        var texture = Plugin.TextureProvider.GetFromFile(path);
+                        if (texture != null && texture.GetWrapOrDefault() != null)
+                            return texture.GetWrapOrDefault();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error loading with TextureProvider: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error using UiBuilder to load image: {ex.Message}");
+            }
+            
+            // Since we couldn't load the actual image, return a placeholder
+            return new PlaceholderTextureWrap();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading image from {path}: {ex.Message}");
+            return null;
+        }
     }
 
     private static IDalamudTextureWrap? LoadIconFromSource(uint iconId)
@@ -60,17 +106,18 @@ public static class IconService
         // Simulate using iconId in the loading logic
         Console.WriteLine($"Loading icon with ID: {iconId}");
         return null; // Replace with actual texture loading
-    }
-
+    }    /// <summary>
+    /// A simple placeholder texture implementation when actual textures can't be loaded
+    /// </summary>
     private sealed class PlaceholderTextureWrap : IDalamudTextureWrap
     {
-        public IntPtr ImGuiHandle => IntPtr.Zero;
-        public int Width => 0;
-        public int Height => 0;
+        public IntPtr ImGuiHandle => IntPtr.Zero; // This signals UI to use fallback
+        public int Width => 64;
+        public int Height => 64;
 
         public void Dispose()
         {
-            // No resources to dispose in this placeholder implementation
+            // No resources to dispose
         }
     }
 }
